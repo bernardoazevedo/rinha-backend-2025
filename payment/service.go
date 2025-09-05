@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"os"
 
 	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
