@@ -91,6 +91,7 @@ func checkUntilReturn() string {
 			break
 		} else {
 			// error checking, will try again
+			fmt.Println("error finding a service online, trying again...")
 			time.Sleep(time.Second / 2)
 		}
 	}
