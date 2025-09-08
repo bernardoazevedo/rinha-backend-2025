@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/payment"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/summary"
@@ -24,7 +23,7 @@ func main() {
 
 	key.Set("url", paymentDefaultUrl)
 
-	go health.HealthWorker()
+	// go health.HealthWorker()
 
 	router := gin.Default()
 	router.POST("/payments", payment.Payments)
