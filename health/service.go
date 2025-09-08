@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
+	"github.com/bernardoazevedo/rinha-de-backend-2025/logger"
 )
 
 func CheckHealth() (string, error) {
@@ -37,9 +38,11 @@ func CheckHealth() (string, error) {
 	} else if !defaultHealth.Failing && !fallbackHealth.Failing {
 		url = paymentDefaultUrl
 	} else { // both offline
+		logger.Add("\t\tboth services are offline")
 		return "", errors.New("no payment service online, try again in a few moments")
 	}
-
+	
+	logger.Add("\t\turl defined: " + url)
 	return url, nil
 }
 
@@ -48,6 +51,9 @@ func check(url string) (Health, error) {
 	response, err := http.Get(url + "/payments/service-health")
 	if err != nil {
 		return health, errors.New("error during request")
+	}
+	if response.StatusCode == 429 {
+		logger.Add("\t\ttome timeout 429: " + url)
 	}
 	defer response.Body.Close()
 

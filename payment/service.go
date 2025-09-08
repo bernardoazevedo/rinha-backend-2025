@@ -9,9 +9,12 @@ import (
 
 	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
+	"github.com/bernardoazevedo/rinha-de-backend-2025/logger"
 )
 
 func postPayment(payment Payment) (string, error) {
+	logger.Add("init - " + payment.CorrelationId)
+
 	paymentJson, err := json.Marshal(payment)
 	if err != nil {
 		return "", errors.New("error parsing payment")
@@ -23,9 +26,11 @@ func postPayment(payment Payment) (string, error) {
 
 	var response *http.Response
 	for {
+		// logger.Add("\tpost: "+url)
 		response, err = http.Post(url+"/payments", "application/json", postBody)
-		if err != nil {
-			url, _ = health.CheckSetReturnUrl()			
+		
+		if err != nil || response.StatusCode != 200 {
+			url, _ = health.CheckSetReturnUrl()
 		} else {
 			break //success
 		}
