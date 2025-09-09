@@ -24,7 +24,8 @@ func postPayment(payment Payment) (string, error) {
 	var response *http.Response
 	for {
 		response, err = http.Post(url+"/payments", "application/json", postBody)
-		if err != nil {
+		
+		if err != nil || response.StatusCode != 200 {
 			url, _ = health.CheckSetReturnUrl()			
 		} else {
 			break //success
