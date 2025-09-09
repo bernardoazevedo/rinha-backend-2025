@@ -22,16 +22,16 @@ func CheckHealth() (string, error) {
 	url := paymentDefaultUrl
 
 	defaultHealth, err := check(paymentDefaultUrl)
-	logger.Add("\tfailing? " + fmt.Sprint(defaultHealth.Failing) + " - minResponseTime: " + fmt.Sprint(defaultHealth.MinResponseTime))
 	if err != nil {
 		defaultHealth.Failing = true
 	}
+	// logger.Add("\tfailing? " + fmt.Sprint(defaultHealth.Failing) + " - minResponseTime: " + fmt.Sprint(defaultHealth.MinResponseTime))
 
 	fallbackHealth, err := check(paymentFallbackUrl)
-	logger.Add("\tfailing? " + fmt.Sprint(fallbackHealth.Failing) + " - minResponseTime: " + fmt.Sprint(fallbackHealth.MinResponseTime))
 	if err != nil {
 		fallbackHealth.Failing = true
 	}
+	// logger.Add("\tfailing? " + fmt.Sprint(fallbackHealth.Failing) + " - minResponseTime: " + fmt.Sprint(fallbackHealth.MinResponseTime))
 
 	if defaultHealth.Failing && !fallbackHealth.Failing {
 		url = paymentFallbackUrl
@@ -48,7 +48,7 @@ func CheckHealth() (string, error) {
 
 func check(url string) (Health, error) {
 	var health Health
-	
+
 	response, err := http.Get(url + "/payments/service-health")
 	if err != nil {
 		return health, errors.New("error during request")
@@ -70,14 +70,14 @@ func check(url string) (Health, error) {
 
 func CheckSetReturnUrl() (string, error) {
 	url := ""
-	newUrl := checkUntilReturn()
+	newUrl := returnOnlineUrl()
 
 	if newUrl != url {
 		url = newUrl
 
 		err := key.Set("url", url)
 		if err != nil {
-			return url, err
+			return url, errors.New("error saving url: " + err.Error())
 		} else {
 			return url, nil
 		}
@@ -86,19 +86,20 @@ func CheckSetReturnUrl() (string, error) {
 	return url, nil
 }
 
-func checkUntilReturn() string {
+func returnOnlineUrl() string {
 	newUrl := ""
 	var err error
-	for {
+	// for {
 		newUrl, err = CheckHealth()
 		if err == nil && newUrl != "" {
-			break
+			//success
+			// break
 		} else {
 			// error checking, will try again
-			fmt.Println("error finding a service online, trying again...")
+			logger.Add("error finding a service online, trying again...")
 			time.Sleep(time.Second / 2)
 		}
-	}
+	// }
 	return newUrl
 }
 

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/adjust/rmq/v5"
+	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/logger"
 	paymentqueue "github.com/bernardoazevedo/rinha-de-backend-2025/paymentQueue"
@@ -150,14 +151,14 @@ func (consumer *Consumer) Consume(delivery rmq.Delivery) {
 		return
 	}
 
-	logger.Add(consumer.name + " posting -> " + payment.CorrelationId)
+	// logger.Add(consumer.name + " posting -> " + payment.CorrelationId)
 
-	result, alreadyExistsPayment, err := postPayment(payment)
+	_, alreadyExistsPayment, err := postPayment(payment)
 	consumer.count++
 	if alreadyExistsPayment {
 		message = "\terror: " + err.Error()
 
-		err = delivery.Ack()
+		err = delivery.Reject()
 		if err != nil {
 			logger.Add("\t\terror acking: " + err.Error())
 		}
@@ -170,17 +171,24 @@ func (consumer *Consumer) Consume(delivery rmq.Delivery) {
 			logger.Add("\t\terror pushing: " + deliveryErr.Error())
 		}
 
+		_, err := health.CheckSetReturnUrl()
+		if err != nil {
+			logger.Add("" + err.Error())
+		}
+
 	} else {
 		// success!
-		message = "\t" + payment.CorrelationId + ": " + result
+		// message = "\t" + payment.CorrelationId + ": " + result
 
 		err = delivery.Ack()
 		if err != nil {
 			logger.Add("\t\terror acking: " + err.Error())
 		}
 
-		logger.Add(fmt.Sprintf("\t%s: %d", consumer.name, consumer.count))
+		// logger.Add(fmt.Sprintf("\t%s: %d", consumer.name, consumer.count))
 	}
 
-	logger.Add(message)
+	if message != "" {
+		logger.Add(message)
+	}
 }
