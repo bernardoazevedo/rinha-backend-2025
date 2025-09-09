@@ -24,6 +24,7 @@ func main() {
 	key.Set("url", paymentDefaultUrl)
 
 	// go health.HealthWorker()
+	go payment.PaymentWorker()
 
 	router := gin.Default()
 	router.POST("/payments", payment.Payments)

@@ -48,6 +48,7 @@ func CheckHealth() (string, error) {
 
 func check(url string) (Health, error) {
 	var health Health
+	
 	response, err := http.Get(url + "/payments/service-health")
 	if err != nil {
 		return health, errors.New("error during request")

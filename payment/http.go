@@ -17,11 +17,16 @@ func Payments(c *gin.Context) {
 	}
 	payment.RequestedAt = time.Now().UTC().Format(time.RFC3339Nano)
 
-	response, err := postPayment(payment)
+	// response, err := postPayment(payment)
+	// if err != nil {
+	// 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+	// 	return
+	// }
+	err = queuePayment(payment)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": response})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "payment added to queue"})
 }
