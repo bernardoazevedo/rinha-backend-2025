@@ -19,17 +19,12 @@ import (
 	paymentqueue "github.com/bernardoazevedo/rinha-de-backend-2025/paymentQueue"
 )
 
-func postPayment(payment Payment) (string, bool, error) {
+func postPayment(paymentJson string) (string, bool, error) {
 	var statusCode int
-
-	paymentJson, err := json.Marshal(payment)
-	if err != nil {
-		return "", false, errors.New("error parsing payment")
-	}
 
 	url, _ := key.Get("url")
 
-	postBody := bytes.NewBuffer(paymentJson)
+	postBody := bytes.NewBufferString(paymentJson)
 
 	response, err := http.Post(url+"/payments", "application/json", postBody)
 	if response != nil {
@@ -47,7 +42,11 @@ func postPayment(payment Payment) (string, bool, error) {
 		return "", true, errors.New(message)
 
 	} else if statusCode != 200 {
-		message := fmt.Sprintf("[%d] status != 200", statusCode)
+		errResponse, err := io.ReadAll(response.Body)
+		if err != nil {
+			return "", false, errors.New("error parsing body")
+		}
+		message := fmt.Sprintf("[%d] status != 200 - response: "+string(errResponse), statusCode)
 		return "", false, errors.New(message)
 
 	} else {
@@ -79,7 +78,6 @@ func queuePayment(payment Payment) error {
 }
 
 func PaymentWorker() {
-	logger.Add("starting payment worker...")
 	connection, err := paymentqueue.GetNewConnection()
 	if err != nil {
 		panic(err)
@@ -113,10 +111,10 @@ func PaymentWorker() {
 		panic(err)
 	}
 
-	_, err = retryQueue.AddConsumer("retryConsumer", NewConsumer("retryConsumer", 1))
-	if err != nil {
-		panic(err)
-	}
+	// _, err = retryQueue.AddConsumer("retryConsumer", NewConsumer("retryConsumer", 1))
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT)
@@ -140,55 +138,34 @@ func NewConsumer(name string, tag int) *Consumer {
 }
 
 func (consumer *Consumer) Consume(delivery rmq.Delivery) {
-	var payment Payment
-	var message string
+	// var payment Payment
 
 	paymentJson := delivery.Payload()
 
-	err := json.Unmarshal([]byte(paymentJson), &payment)
-	if err != nil {
-		logger.Add("error parsing payment: " + paymentJson)
-		return
-	}
-
-	// logger.Add(consumer.name + " posting -> " + payment.CorrelationId)
-
-	_, alreadyExistsPayment, err := postPayment(payment)
+	_, alreadyExistsPayment, err := postPayment(paymentJson)
 	consumer.count++
 	if alreadyExistsPayment {
-		message = "\terror: " + err.Error()
-
 		err = delivery.Reject()
 		if err != nil {
 			logger.Add("\t\terror acking: " + err.Error())
 		}
 
 	} else if err != nil {
-		message = "\terror: " + err.Error()
+		_, err := health.CheckSetReturnUrl()
+		if err != nil {
+			logger.Add("" + err.Error())
+		}
 
 		deliveryErr := delivery.Push()
 		if deliveryErr != nil {
 			logger.Add("\t\terror pushing: " + deliveryErr.Error())
 		}
 
-		_, err := health.CheckSetReturnUrl()
-		if err != nil {
-			logger.Add("" + err.Error())
-		}
-
 	} else {
 		// success!
-		// message = "\t" + payment.CorrelationId + ": " + result
-
 		err = delivery.Ack()
 		if err != nil {
 			logger.Add("\t\terror acking: " + err.Error())
 		}
-
-		// logger.Add(fmt.Sprintf("\t%s: %d", consumer.name, consumer.count))
-	}
-
-	if message != "" {
-		logger.Add(message)
 	}
 }
