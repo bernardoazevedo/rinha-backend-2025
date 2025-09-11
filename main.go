@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
+	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/payment"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/summary"
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,7 @@ func main() {
 	}
 	paymentDefaultUrl := os.Getenv("PAYMENT_DEFAULT_URL")
 
-	key.Set("url", paymentDefaultUrl)
+	health.PostUrl = paymentDefaultUrl
 
 	// go health.HealthWorker()
 	go payment.PaymentWorker()
