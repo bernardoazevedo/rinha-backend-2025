@@ -22,13 +22,11 @@ func CheckHealth() (string, error) {
 	url := paymentDefaultUrl
 
 	defaultHealth, err := check(paymentDefaultUrl)
-	logger.Add("\tfailing? " + fmt.Sprint(defaultHealth.Failing) + " - minResponseTime: " + fmt.Sprint(defaultHealth.MinResponseTime))
 	if err != nil {
 		defaultHealth.Failing = true
 	}
 
 	fallbackHealth, err := check(paymentFallbackUrl)
-	logger.Add("\tfailing? " + fmt.Sprint(fallbackHealth.Failing) + " - minResponseTime: " + fmt.Sprint(fallbackHealth.MinResponseTime))
 	if err != nil {
 		fallbackHealth.Failing = true
 	}
@@ -94,7 +92,7 @@ func checkUntilReturn() string {
 			break
 		} else {
 			// error checking, will try again
-			fmt.Println("error finding a service online, trying again...")
+			logger.Add("error finding a service online, trying again...")
 			time.Sleep(time.Second / 2)
 		}
 	}
