@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
+	"fmt"
 	"net/http"
 
 	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
@@ -18,27 +18,37 @@ func postPayment(payment Payment) (string, error) {
 
 	url := health.PostUrl
 
+	var response *http.Response
+	var statusCode int
+	var errorMessage string
+	
 	postBody := bytes.NewBuffer(paymentJson)
 
-	var response *http.Response
-	
 	for i := 0; i < 3; i++ {
 		response, err = http.Post(url+"/payments", "application/json", postBody)
-		
-		// if response != nil && response.StatusCode == 
-
-		if err != nil || response.StatusCode != 200 {
-			url, _ = health.CheckSetReturnUrl()			
+		if response != nil {
+			statusCode = response.StatusCode
 		} else {
-			break //success
+			statusCode = 400
 		}
-		defer response.Body.Close()
+
+		if err != nil {
+			errorMessage = fmt.Sprintf("[%d] "+err.Error(), statusCode)
+			// return response, false, errors.New(errorMessage)
+
+		} else if statusCode == http.StatusUnprocessableEntity {
+			return "This payment already exists", nil
+
+		} else if statusCode != 200 {
+			errorMessage = fmt.Sprintf("[%d] status != 200", statusCode)
+			// return response, false, errors.New(errorMessage)
+
+		} else { //success
+			return "Success", nil
+		}
+
+		url, _ = health.CheckSetReturnUrl()
 	}
 
-	responseBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", errors.New("error parsing body")
-	}
-
-	return string(responseBody), nil
+	return "", errors.New(errorMessage)
 }
