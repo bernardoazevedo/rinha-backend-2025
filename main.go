@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
+	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/payment"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/summary"
 	"github.com/gin-gonic/gin"
@@ -20,10 +20,12 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	paymentDefaultUrl := os.Getenv("PAYMENT_DEFAULT_URL")
+	paymentFallbackUrl := os.Getenv("PAYMENT_FALLBACK_URL")
 
-	key.Set("url", paymentDefaultUrl)
-
-	// go health.HealthWorker()
+	//init default url
+	health.PostUrl = paymentDefaultUrl
+	health.PaymentDefaultUrl = paymentDefaultUrl
+	health.PaymentFallbackUrl = paymentFallbackUrl
 
 	router := gin.Default()
 	router.POST("/payments", payment.Payments)

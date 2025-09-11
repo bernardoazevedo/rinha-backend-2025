@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
-	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
 )
 
 func postPayment(payment Payment) (string, error) {
@@ -17,14 +16,17 @@ func postPayment(payment Payment) (string, error) {
 		return "", errors.New("error parsing payment")
 	}
 
-	url, _ := key.Get("url")
+	url := health.PostUrl
 
 	postBody := bytes.NewBuffer(paymentJson)
 
 	var response *http.Response
-	for {
+	
+	for i := 0; i < 3; i++ {
 		response, err = http.Post(url+"/payments", "application/json", postBody)
 		
+		// if response != nil && response.StatusCode == 
+
 		if err != nil || response.StatusCode != 200 {
 			url, _ = health.CheckSetReturnUrl()			
 		} else {

@@ -21,8 +21,8 @@ services:
     build: .
     volumes:
       - ./:/app
-    depends_on:
-      - redis
+    # depends_on:
+    #   - redis
     networks:
       - api
       - payment-processor
@@ -36,8 +36,8 @@ services:
     build: .
     volumes:
       - ./:/app
-    depends_on:
-      - redis
+    # depends_on:
+    #   - redis
     networks:
       - api
       - payment-processor
@@ -47,21 +47,21 @@ services:
     #       cpus: "0.5"
     #       memory: "150MB"
           
-  redis:
-    image: "redis:alpine"
-    ports:
-      - 6379:6379
-    volumes:
-      - redis-data:/data
-    networks:
-      - api
+  # redis:
+  #   image: "redis:alpine"
+  #   ports:
+  #     - 6379:6379
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - api
     # deploy:
     #   resources:
     #     limits:
     #       cpus: "0.35"
     #       memory: "35MB"
-volumes:
-  redis-data:
+# volumes:
+#   redis-data:
 
 networks:
   api:

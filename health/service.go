@@ -11,34 +11,32 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
 	"github.com/bernardoazevedo/rinha-de-backend-2025/logger"
 )
 
+var PostUrl 			string
+var PaymentDefaultUrl 	string
+var PaymentFallbackUrl 	string
+
 func CheckHealth() (string, error) {
-	paymentDefaultUrl := os.Getenv("PAYMENT_DEFAULT_URL")
-	paymentFallbackUrl := os.Getenv("PAYMENT_FALLBACK_URL")
+	var url string
 
-	url := paymentDefaultUrl
-
-	defaultHealth, err := check(paymentDefaultUrl)
-	logger.Add("\tfailing? " + fmt.Sprint(defaultHealth.Failing) + " - minResponseTime: " + fmt.Sprint(defaultHealth.MinResponseTime))
+	defaultHealth, err := check(PaymentDefaultUrl)
 	if err != nil {
 		defaultHealth.Failing = true
 	}
 
-	fallbackHealth, err := check(paymentFallbackUrl)
-	logger.Add("\tfailing? " + fmt.Sprint(fallbackHealth.Failing) + " - minResponseTime: " + fmt.Sprint(fallbackHealth.MinResponseTime))
+	fallbackHealth, err := check(PaymentFallbackUrl)
 	if err != nil {
 		fallbackHealth.Failing = true
 	}
 
 	if defaultHealth.Failing && !fallbackHealth.Failing {
-		url = paymentFallbackUrl
+		url = PaymentFallbackUrl
 	} else if !defaultHealth.Failing && fallbackHealth.Failing {
-		url = paymentDefaultUrl
+		url = PaymentDefaultUrl
 	} else if !defaultHealth.Failing && !fallbackHealth.Failing {
-		url = paymentDefaultUrl
+		url = PaymentDefaultUrl
 	} else { // both offline
 		return "", errors.New("no payment service online, try again in a few moments")
 	}
@@ -68,34 +66,23 @@ func check(url string) (Health, error) {
 }
 
 func CheckSetReturnUrl() (string, error) {
-	url := ""
-	newUrl := checkUntilReturn()
-
-	if newUrl != url {
-		url = newUrl
-
-		err := key.Set("url", url)
-		if err != nil {
-			return url, err
-		} else {
-			return url, nil
-		}
-	}
-
-	return url, nil
+	PostUrl = checkUntilReturn()
+	return PostUrl, nil
 }
 
 func checkUntilReturn() string {
 	newUrl := ""
 	var err error
-	for {
+	for i := 0; i < 3; i++ {
 		newUrl, err = CheckHealth()
 		if err == nil && newUrl != "" {
 			break
 		} else {
 			// error checking, will try again
-			fmt.Println("error finding a service online, trying again...")
-			time.Sleep(time.Second / 2)
+			logger.Add("error finding a service online, trying again..." + fmt.Sprintf("%d", i))
+			for j := 0; j < i; j++ {
+				time.Sleep(time.Second)
+			}
 		}
 	}
 	return newUrl
