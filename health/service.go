@@ -16,8 +16,8 @@ import (
 var PostUrl string
 
 func CheckHealth() (string, error) {
-	paymentDefaultUrl := os.Getenv("PAYMENT_DEFAULT_URL")
-	paymentFallbackUrl := os.Getenv("PAYMENT_FALLBACK_URL")
+	paymentDefaultUrl := "http://payment-processor-default:8080"
+	paymentFallbackUrl := "http://payment-processor-fallback:8080"
 
 	url := paymentDefaultUrl
 

@@ -5,8 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	paymentqueue "github.com/bernardoazevedo/rinha-de-backend-2025/paymentQueue"
+	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/paymentQueue"
 )
 
 func PaymentWorker() {
@@ -14,15 +15,21 @@ func PaymentWorker() {
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		paymentJson := paymentqueue.Pop()
+		for {
+			paymentJson := paymentqueue.Pop()
 
-		_, err := postPayment(paymentJson)
-		if err != nil {
-			fmt.Println("error: " + err.Error())
+			if paymentJson != "" {
+				_, err := postPayment(paymentJson)
+				if err != nil {
+					fmt.Println("error: " + err.Error())
+				}
+			} else {
+				time.Sleep(time.Second / 2)
+			}
 		}
 	}()
 
-	fmt.Println("Monitoring services health...")
+	fmt.Println("Monitoring payments...")
 	<-sigchan
 
 	fmt.Println("Killed, shutting down")

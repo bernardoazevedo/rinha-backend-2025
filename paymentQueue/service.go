@@ -7,11 +7,12 @@ func Push(paymentJson string) {
 }
 
 func Pop() string {
+	paymentJson := ""
+
 	if len(paymentQueue) > 0 {
-		paymentJson := paymentQueue[0]
+		paymentJson = paymentQueue[0]
 		paymentQueue = paymentQueue[1:]  
-		return paymentJson
-	} else {
-		return ""
 	}
+
+	return paymentJson
 }

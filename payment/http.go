@@ -2,34 +2,47 @@ package payment
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
-func Payments(c *gin.Context) {
-	var payment Payment
-
-	err := c.BindJSON(&payment)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "error binding payment"})
+func Payments(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	var payment Payment
+
+	responseBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.Unmarshal(responseBody, &payment)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	payment.RequestedAt = time.Now().UTC().Format(time.RFC3339Nano)
 
 	paymentBytes, err := json.Marshal(payment)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "error binding payment back"})
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	paymentJson := string(paymentBytes)
 
 
+	w.Header().Set("Content-Type", "application/json")
+
 	err = queuePayment(paymentJson)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, "")
+	w.WriteHeader(http.StatusOK)
 }

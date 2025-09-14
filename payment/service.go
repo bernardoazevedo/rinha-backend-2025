@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bernardoazevedo/rinha-de-backend-2025/health"
-	paymentqueue "github.com/bernardoazevedo/rinha-de-backend-2025/paymentQueue"
+	"github.com/bernardoazevedo/rinha-backend-2025/health"
+	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/paymentQueue"
 )
 
 func postPayment(paymentJson string) (bool, error) {

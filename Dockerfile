@@ -6,6 +6,5 @@ WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download
-RUN go clean -cache
 
 ENTRYPOINT ["air"]
