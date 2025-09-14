@@ -1,6 +1,7 @@
 package payment
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -17,11 +18,18 @@ func Payments(c *gin.Context) {
 	}
 	payment.RequestedAt = time.Now().UTC().Format(time.RFC3339Nano)
 
-	response, err := postPayment(payment)
+	paymentBytes, err := json.Marshal(payment)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "error binding payment back"})
 		return
 	}
+	paymentJson := string(paymentBytes)
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": response})
+
+	err = queuePayment(paymentJson)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, "")
+		return
+	}
+	c.IndentedJSON(http.StatusOK, "")
 }
