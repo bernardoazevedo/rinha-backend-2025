@@ -4,7 +4,7 @@ RUN go install github.com/air-verse/air@latest
 
 WORKDIR /app
 
-# RUN go mod download && go mod verify
-# RUN go build -o /app/server
+COPY go.mod go.sum ./
+RUN go mod download
 
 ENTRYPOINT ["air"]
