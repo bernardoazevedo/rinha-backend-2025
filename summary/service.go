@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 func getPaymentsSummary(paymentUrl string, from string, to string) (Summary, error) {
@@ -26,7 +25,7 @@ func getPaymentsSummary(paymentUrl string, from string, to string) (Summary, err
 	}
 
 	request.Header.Add("Content-Type", "application/json")
-	request.Header.Add("X-Rinha-Token", os.Getenv("TOKEN"))
+	request.Header.Add("X-Rinha-Token", "123")
 
 	response, err := client.Do(request)
 	if err != nil {

@@ -11,57 +11,37 @@ services:
     networks:
       - api
       - payment-processor
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.15"
-    #       memory: "15MB"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.15"
+          memory: "15MB"
 
   api1:
     build: .
     volumes:
       - ./:/app
-    depends_on:
-      - redis
     networks:
       - api
       - payment-processor
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.5"
-    #       memory: "150MB"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.70"
+          memory: "170MB"
 
   api2:
     build: .
     volumes:
       - ./:/app
-    depends_on:
-      - redis
     networks:
       - api
       - payment-processor
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.5"
-    #       memory: "150MB"
-          
-  redis:
-    image: "redis:alpine"
-    ports:
-      - 6379:6379
-    volumes:
-      - redis-data:/data
-    networks:
-      - api
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.35"
-    #       memory: "35MB"
-volumes:
-  redis-data:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.65"
+          memory: "165MB"
 
 networks:
   api:

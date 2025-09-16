@@ -11,12 +11,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bernardoazevedo/rinha-de-backend-2025/key"
 )
 
+var PostUrl string
+
 func CheckHealth() (string, error) {
-	paymentDefaultUrl := os.Getenv("PAYMENT_DEFAULT_URL")
-	paymentFallbackUrl := os.Getenv("PAYMENT_FALLBACK_URL")
+	paymentDefaultUrl := "http://payment-processor-default:8080"
+	paymentFallbackUrl := "http://payment-processor-fallback:8080"
 
 	url := paymentDefaultUrl
 
@@ -30,14 +31,10 @@ func CheckHealth() (string, error) {
 		fallbackHealth.Failing = true
 	}
 
-	if defaultHealth.Failing && !fallbackHealth.Failing {
+	if (defaultHealth.MinResponseTime <= fallbackHealth.MinResponseTime) && !defaultHealth.Failing {
+		url = paymentDefaultUrl
+	} else {
 		url = paymentFallbackUrl
-	} else if !defaultHealth.Failing && fallbackHealth.Failing {
-		url = paymentDefaultUrl
-	} else if !defaultHealth.Failing && !fallbackHealth.Failing {
-		url = paymentDefaultUrl
-	} else { // both offline
-		return "", errors.New("no payment service online, try again in a few moments")
 	}
 
 	return url, nil
@@ -65,21 +62,13 @@ func check(url string) (Health, error) {
 }
 
 func CheckSetReturnUrl() (string, error) {
-	url := ""
 	newUrl := checkUntilReturn()
 
-	if newUrl != url {
-		url = newUrl
-
-		err := key.Set("url", url)
-		if err != nil {
-			return url, err
-		} else {
-			return url, nil
-		}
+	if newUrl != "" {
+		PostUrl = newUrl
 	}
 
-	return url, nil
+	return newUrl, nil
 }
 
 func checkUntilReturn() string {
