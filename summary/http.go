@@ -2,44 +2,41 @@ package summary
 
 import (
 	"encoding/json"
-	"net/http"
+
+	"github.com/valyala/fasthttp"
 )
 
-func PaymentsSummary(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func PaymentsSummary(ctx *fasthttp.RequestCtx) {
 	summary := make(map[string]Summary)
 	paymentDefaultUrl := "http://payment-processor-default:8080"
 	paymentFallbackUrl := "http://payment-processor-fallback:8080"
 
-	from := r.URL.Query().Get("from")
-	to := r.URL.Query().Get("to")
+	queryArgs := ctx.QueryArgs()
+	from := string(queryArgs.Peek("from"))
+	to := string(queryArgs.Peek("to"))
 
 	defaultSummary, err := getPaymentsSummary(paymentDefaultUrl, from, to)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 	summary["default"] = defaultSummary
-	
+
 	fallbackSummary, err := getPaymentsSummary(paymentFallbackUrl, from, to)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 	summary["fallback"] = fallbackSummary
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(fasthttp.StatusOK)
 
 	summaryJson, err := json.Marshal(summary)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
-	
-	w.Write(summaryJson)
+
+	ctx.Write(summaryJson)
 }

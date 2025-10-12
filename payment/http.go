@@ -2,28 +2,19 @@ package payment
 
 import (
 	"encoding/json"
-	"io"
-	"net/http"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
-func Payments(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func Payments(ctx *fasthttp.RequestCtx) {
 	var payment Payment
 
-	responseBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	post := ctx.PostBody()
 
-	err = json.Unmarshal(responseBody, &payment)
+	err := json.Unmarshal(post, &payment)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 
@@ -31,18 +22,18 @@ func Payments(w http.ResponseWriter, r *http.Request) {
 
 	paymentBytes, err := json.Marshal(payment)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 	paymentJson := string(paymentBytes)
 
+	ctx.SetContentType("application/json")
 
-	w.Header().Set("Content-Type", "application/json")
-
-	err = queuePayment(paymentJson)
+	// err = queuePayment(paymentJson)
+	_, err = postPayment(paymentJson)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	ctx.SetStatusCode(fasthttp.StatusOK)
 }

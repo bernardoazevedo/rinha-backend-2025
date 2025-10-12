@@ -75,14 +75,7 @@ func post(url string, paymentJson string) (*http.Response, bool, error) {
 	}
 }
 
-// func queuePayment(payment Payment) error {
 func queuePayment(paymentJson string) error {
-	// paymentJson, err := json.Marshal(payment)
-	// if err != nil {
-	// 	return errors.New("error parsing payment")
-	// }
-
 	paymentqueue.Push(paymentJson)
-
 	return nil
 }
