@@ -17,6 +17,7 @@ func main() {
 
 	go health.HealthWorker()
 	go payment.PaymentWorker()
+	go payment.PaymentWorker()
 
 	http.HandleFunc("/payments", payment.Payments)
 	http.HandleFunc("/payments-summary", summary.PaymentsSummary)
