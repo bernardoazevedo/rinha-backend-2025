@@ -1,7 +1,6 @@
 package payment
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,17 +8,17 @@ import (
 
 	"github.com/bernardoazevedo/rinha-backend-2025/health"
 	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/paymentQueue"
+	"github.com/valyala/fasthttp"
 )
 
-func postPayment(paymentJson string) (bool, error) {
-	var response *http.Response
+func postPayment(payment []byte) (bool, error) {
 	var err error
 	alreadyExistsPayment := false
 
 	url := health.PostUrl
 
 	for i := 0; i < 3; i++ {
-		response, alreadyExistsPayment, err = post(url, paymentJson)
+		_, alreadyExistsPayment, err = post(url, payment)
 
 		if alreadyExistsPayment {
 			// saio fora
@@ -29,7 +28,7 @@ func postPayment(paymentJson string) (bool, error) {
 			// tento até a 3 vez
 			url, err = health.CheckSetReturnUrl()
 			if err != nil {
-				fmt.Printf("erro [%d] ao checar url: "+ err.Error()+"\n", i) 
+				fmt.Printf("erro [%d] ao checar url: "+err.Error()+"\n", i)
 
 				for j := 0; j < i; j++ { // espera 1s * numRequisicao => 1s, 2s, 3s
 					time.Sleep(time.Second)
@@ -37,7 +36,7 @@ func postPayment(paymentJson string) (bool, error) {
 			}
 
 		} else {
-			defer response.Body.Close()
+			// defer response.CloseBodyStream()
 			// deu bom, saio fora
 			break
 		}
@@ -46,17 +45,22 @@ func postPayment(paymentJson string) (bool, error) {
 	return alreadyExistsPayment, err
 }
 
-func post(url string, paymentJson string) (*http.Response, bool, error) {
+func post(url string, body []byte) (*fasthttp.Response, bool, error) {
 	var statusCode int
 
-	postBody := bytes.NewBufferString(paymentJson)
+	req := fasthttp.AcquireRequest()
+	req.SetBody(body)
+	req.Header.SetMethod("POST")
+	req.Header.SetContentType("application/json")
+	req.Header.SetRequestURI(url + "/payments")
+	response := fasthttp.AcquireResponse()
 
-	response, err := http.Post(url+"/payments", "application/json", postBody)
-	if response != nil {
-		statusCode = response.StatusCode
-	} else {
+	err := fasthttp.Do(req, response)
+	statusCode = response.StatusCode()
+	if err != nil {
 		statusCode = 400
 	}
+	defer fasthttp.ReleaseRequest(req)
 
 	if err != nil {
 		message := fmt.Sprintf("[%d] "+err.Error(), statusCode)

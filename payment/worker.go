@@ -17,9 +17,10 @@ func PaymentWorker() {
 	go func() {
 		for {
 			paymentJson := paymentqueue.Pop()
+			payment := []byte(paymentJson)
 
 			if paymentJson != "" {
-				_, err := postPayment(paymentJson)
+				_, err := postPayment(payment)
 				if err != nil {
 					fmt.Println("error: " + err.Error())
 				}
