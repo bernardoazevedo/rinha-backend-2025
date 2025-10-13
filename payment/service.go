@@ -80,6 +80,6 @@ func post(url string, body []byte) (*fasthttp.Response, bool, error) {
 }
 
 func queuePayment(payment []byte) error {
-	paymentqueue.Push(payment)
+	paymentqueue.Add(payment)
 	return nil
 }

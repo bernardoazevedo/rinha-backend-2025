@@ -1,18 +1,30 @@
 package paymentqueue
 
-var paymentQueue [][]byte
+import "github.com/adjust/rmq/v5"
 
-func Push(payment []byte) {
-	paymentQueue = append(paymentQueue, payment)
+func GetNewConnection() (rmq.Connection, error) {
+	connection, err := rmq.OpenConnection("queue", "tcp", "redis:6379", 1, nil)
+	if err != nil {
+		return connection, err
+	}
+	return connection, nil
 }
 
-func Pop() []byte {
-	var payment []byte
-
-	if len(paymentQueue) > 0 {
-		payment = paymentQueue[0]
-		paymentQueue = paymentQueue[1:]  
+func Add(item []byte) error {
+	client, err := GetNewConnection()
+	if err != nil {
+		return err
 	}
 
-	return payment
+	queue, err := client.OpenQueue("payment")
+	if err != nil {
+		return err
+	}
+
+	err = queue.PublishBytes(item)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
