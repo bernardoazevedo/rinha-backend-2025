@@ -1,18 +1,18 @@
 package paymentqueue
 
-var paymentQueue []string
+var paymentQueue [][]byte
 
-func Push(paymentJson string) {
-	paymentQueue = append(paymentQueue, paymentJson)
+func Push(payment []byte) {
+	paymentQueue = append(paymentQueue, payment)
 }
 
-func Pop() string {
-	paymentJson := ""
+func Pop() []byte {
+	var payment []byte
 
 	if len(paymentQueue) > 0 {
-		paymentJson = paymentQueue[0]
+		payment = paymentQueue[0]
 		paymentQueue = paymentQueue[1:]  
 	}
 
-	return paymentJson
+	return payment
 }

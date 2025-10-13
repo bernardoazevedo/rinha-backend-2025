@@ -11,11 +11,11 @@ services:
     networks:
       - api
       - payment-processor
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.15"
-    #       memory: "15MB"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.15"
+          memory: "15MB"
 
   api1:
     build: .
@@ -24,11 +24,11 @@ services:
     networks:
       - api
       - payment-processor
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.70"
-    #       memory: "170MB"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.70"
+          memory: "170MB"
 
   api2:
     build: .
@@ -37,11 +37,11 @@ services:
     networks:
       - api
       - payment-processor
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.65"
-    #       memory: "165MB"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.65"
+          memory: "165MB"
 
 networks:
   api:

@@ -79,7 +79,7 @@ func post(url string, body []byte) (*fasthttp.Response, bool, error) {
 	}
 }
 
-func queuePayment(paymentJson string) error {
-	paymentqueue.Push(paymentJson)
+func queuePayment(payment []byte) error {
+	paymentqueue.Push(payment)
 	return nil
 }

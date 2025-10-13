@@ -17,7 +17,9 @@ func main() {
 	health.PostUrl = "http://payment-processor-default:8080"
 
 	go health.HealthWorker()
-	// go payment.PaymentWorker()
+	go payment.PaymentWorker()
+	go payment.PaymentWorker()
+	go payment.PaymentWorker()
 
 	r := router.New()
 	r.POST("/payments", callPayments)
