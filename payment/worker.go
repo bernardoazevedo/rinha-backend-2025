@@ -12,6 +12,9 @@ import (
 )
 
 func PaymentWorker() {
+	mainWorkersQuantity := 3
+	retryWorkersQuantity := 1
+
 	connection, err := paymentqueue.GetNewConnection()
 	if err != nil {
 		panic(err)
@@ -40,18 +43,18 @@ func PaymentWorker() {
 		panic(err)
 	}
 
-	_, err = mainQueue.AddConsumer("mainConsumer", NewConsumer("mainConsumer", 1))
-	if err != nil {
-		panic(err)
-	}
-	_, err = mainQueue.AddConsumer("mainConsumer", NewConsumer("mainConsumer", 2))
-	if err != nil {
-		panic(err)
+	for i := 1; i <= mainWorkersQuantity; i++ {
+		_, err = mainQueue.AddConsumer("mainConsumer", NewConsumer("mainConsumer", i))
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	_, err = retryQueue.AddConsumer("retryConsumer", NewConsumer("retryConsumer", 1))
-	if err != nil {
-		panic(err)
+	for i := 1; i <= retryWorkersQuantity; i++ {
+		_, err = retryQueue.AddConsumer("retryConsumer", NewConsumer("retryConsumer", i))
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	signals := make(chan os.Signal, 1)
@@ -87,7 +90,7 @@ func (consumer *Consumer) Consume(delivery rmq.Delivery) {
 		}
 
 	} else if err != nil {
-		fmt.Println("mandando de "+ consumer.name +" pra próxima fila")
+		fmt.Println("mandando de " + consumer.name + " pra próxima fila")
 		deliveryErr := delivery.Push()
 		if deliveryErr != nil {
 			fmt.Println("\t\terror pushing: " + deliveryErr.Error())

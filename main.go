@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/bernardoazevedo/rinha-backend-2025/health"
+	"github.com/bernardoazevedo/rinha-backend-2025/key"
 	"github.com/bernardoazevedo/rinha-backend-2025/payment"
 	"github.com/bernardoazevedo/rinha-backend-2025/summary"
 	"github.com/fasthttp/router"
@@ -13,6 +14,8 @@ import (
 func main() {
 	log.SetPrefix("main: ")
 	log.SetFlags(0)
+
+	key.GetNewClient()
 
 	health.PostUrl = "http://payment-processor-default:8080"
 

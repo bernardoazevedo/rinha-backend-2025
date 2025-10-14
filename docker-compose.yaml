@@ -28,7 +28,7 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: "500MB"
+          memory: "150MB"
 
   api2:
     build: .
@@ -41,7 +41,7 @@ services:
       resources:
         limits:
           cpus: "0.50"
-          memory: "500MB"
+          memory: "150MB"
         
   redis:
     image: "redis:alpine"
