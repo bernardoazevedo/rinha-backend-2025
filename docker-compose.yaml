@@ -24,11 +24,11 @@ services:
     networks:
       - api
       - payment-processor
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: "150MB"
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "0.50"
+    #       memory: "150MB"
 
   api2:
     build: .
@@ -37,11 +37,11 @@ services:
     networks:
       - api
       - payment-processor
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: "150MB"
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "0.50"
+    #       memory: "150MB"
         
   redis:
     image: "redis:alpine"

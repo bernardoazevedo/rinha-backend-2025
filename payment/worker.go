@@ -1,106 +1,76 @@
 package payment
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/adjust/rmq/v5"
+	"github.com/bernardoazevedo/rinha-backend-2025/key"
 	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/paymentQueue"
 )
 
+// func PaymentWorker() {
+// 	sigchan := make(chan os.Signal, 1)
+// 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+// 	go func() {
+// 		var err error
+
+// 		for {
+// 			payment := paymentqueue.Get()
+// 			if payment != "" {
+// 				_, err = postPayment([]byte(payment))
+// 				if err != nil {
+// 					fmt.Println("erro: " + err.Error())
+// 				}
+// 			} else {
+// 				time.Sleep(time.Second)
+// 			}
+// 		}
+// 	}()
+
+// 	fmt.Println("Monitoring payments...")
+// 	<-sigchan
+
+// 	fmt.Println("Killed, shutting down")
+// }
+
 func PaymentWorker() {
-	mainWorkersQuantity := 3
-	retryWorkersQuantity := 1
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	ctx := context.Background()
 
-	connection, err := paymentqueue.GetNewConnection()
-	if err != nil {
-		panic(err)
-	}
 
-	// all payments are stored here
-	mainQueue, err := connection.OpenQueue("payment")
-	if err != nil {
-		panic(err)
-	}
+	client := key.GetNewClient()
+	pubsub := client.Subscribe(ctx, paymentqueue.QueueName)
+	channel := pubsub.Channel()
 
-	// if a consume fail, we move the item to here
-	retryQueue, err := connection.OpenQueue("retryPayment")
-	if err != nil {
-		panic(err)
-	}
-	mainQueue.SetPushQueue(retryQueue)
-
-	err = mainQueue.StartConsuming(10, time.Second)
-	if err != nil {
-		panic(err)
-	}
-
-	err = retryQueue.StartConsuming(10, time.Second)
-	if err != nil {
-		panic(err)
-	}
-
-	for i := 1; i <= mainWorkersQuantity; i++ {
-		_, err = mainQueue.AddConsumer("mainConsumer", NewConsumer("mainConsumer", i))
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	for i := 1; i <= retryWorkersQuantity; i++ {
-		_, err = retryQueue.AddConsumer("retryConsumer", NewConsumer("retryConsumer", i))
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT)
-	defer signal.Stop(signals)
-
-	<-signals
 	go func() {
-		<-signals
-		os.Exit(1)
+		var err error
+
+		for {
+			msg, ok := <-channel
+			if !ok {
+				break
+			}
+			// msg, err := pubsub.ReceiveMessage(ctx)			
+			// if err != nil {
+			// 	fmt.Println("erro ao receber: " + err.Error())
+			// }
+
+			_, err = postPayment([]byte(msg.Payload))
+			if err != nil {
+				fmt.Println("erro ao enviar: " + err.Error())
+			}
+		}
 	}()
 
-	<-connection.StopAllConsuming()
-}
+	defer pubsub.Close()
 
-func NewConsumer(name string, tag int) *Consumer {
-	return &Consumer{
-		name:   fmt.Sprintf(name+"%d", tag),
-		count:  0,
-		before: time.Now(),
-	}
-}
+	fmt.Println("Monitoring payments...")
+	<-sigchan
 
-func (consumer *Consumer) Consume(delivery rmq.Delivery) {
-	payment := []byte(delivery.Payload())
-
-	alreadyExistsPayment, err := postPayment(payment)
-	consumer.count++
-	if alreadyExistsPayment {
-		err = delivery.Reject()
-		if err != nil {
-			fmt.Println("\t\terror acking: " + err.Error())
-		}
-
-	} else if err != nil {
-		fmt.Println("mandando de " + consumer.name + " pra próxima fila")
-		deliveryErr := delivery.Push()
-		if deliveryErr != nil {
-			fmt.Println("\t\terror pushing: " + deliveryErr.Error())
-		}
-
-	} else {
-		// success!
-		err = delivery.Ack()
-		if err != nil {
-			fmt.Println("\t\terror acking: " + err.Error())
-		}
-	}
+	fmt.Println("Killed, shutting down")
 }

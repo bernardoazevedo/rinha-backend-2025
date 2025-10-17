@@ -65,3 +65,39 @@ func Delete(key string) (error) {
 
 	return nil
 }
+
+func Push(queue string, value string) error {
+	client := GetClient()
+	ctx := context.Background()
+
+	err := client.RPush(ctx, queue, value).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Pop(queue string) (string, error) {
+	client := GetClient()
+	ctx := context.Background()
+
+	value, err := client.LPop(ctx, queue).Result()
+	if err != nil {
+		return value, err
+	}
+
+	return value, nil
+}
+
+func Publish(channel string, value string) error {
+	client := GetClient()
+	ctx := context.Background()
+
+	err := client.Publish(ctx, channel, value).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
