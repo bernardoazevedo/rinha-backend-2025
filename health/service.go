@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/valyala/fasthttp"
 )
 
 var PostUrl string
@@ -42,17 +41,20 @@ func CheckHealth() (string, error) {
 
 func check(url string) (Health, error) {
 	var health Health
-	response, err := http.Get(url + "/payments/service-health")
+
+	req := fasthttp.AcquireRequest()
+	req.Header.SetMethod("GET")
+	req.Header.SetContentType("application/json")
+	req.Header.SetRequestURI(url + "/payments/service-health")
+	response := fasthttp.AcquireResponse()
+
+	err := fasthttp.Do(req, response)
 	if err != nil {
 		return health, errors.New("error during request")
 	}
-	defer response.Body.Close()
+	defer fasthttp.ReleaseRequest(req)
 
-	responseBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		return health, errors.New("error parsing body")
-	}
-
+	responseBody := response.Body()
 	err = json.Unmarshal(responseBody, &health)
 	if err != nil {
 		return health, errors.New("error parsing health")
