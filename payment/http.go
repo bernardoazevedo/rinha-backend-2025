@@ -29,7 +29,6 @@ func Payments(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json")
 
 	err = queuePayment(paymentBytes)
-	// _, err = postPayment(paymentBytes)
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return

@@ -24,7 +24,10 @@ func main() {
 	paymentqueue.QueueName = uniqid("payment")
 
 	go health.HealthWorker()
-	go payment.PaymentWorker()
+
+	for i := 0; i < 1; i++ {
+		go payment.PaymentWorker()
+	}
 
 	r := router.New()
 	r.POST("/payments", callPayments)

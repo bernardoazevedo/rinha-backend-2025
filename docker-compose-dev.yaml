@@ -22,17 +22,19 @@ services:
   api1: &api
     build: 
       context: .
-      dockerfile: build/Dockerfile
+      dockerfile: build/Dockerfile.dev
+    volumes:
+      - ./:/app
     networks:
       - api
       - payment-processor
     depends_on:
       - redis
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: "75MB"
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "0.25"
+    #       memory: "75MB"
 
   api2:
     <<: *api
