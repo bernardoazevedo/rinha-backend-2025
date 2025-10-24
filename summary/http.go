@@ -17,7 +17,7 @@ func PaymentsSummary(ctx *fasthttp.RequestCtx) {
 
 	defaultCh, fallbackCh := make(chan Summary), make(chan Summary)
 
-	go func()  {
+	go func() {
 		defaultSummary, err := getPaymentsSummary(paymentDefaultUrl, from, to)
 		if err != nil {
 			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -25,8 +25,8 @@ func PaymentsSummary(ctx *fasthttp.RequestCtx) {
 		}
 		defaultCh <- defaultSummary
 	}()
-	
-	go func()  {
+
+	go func() {
 		fallbackSummary, err := getPaymentsSummary(paymentFallbackUrl, from, to)
 		if err != nil {
 			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -35,8 +35,7 @@ func PaymentsSummary(ctx *fasthttp.RequestCtx) {
 		fallbackCh <- fallbackSummary
 	}()
 
-	summary["default"] = <-defaultCh
-	summary["fallback"] = <-fallbackCh
+	summary["default"], summary["fallback"] = <-defaultCh, <-fallbackCh
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)

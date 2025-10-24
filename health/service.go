@@ -20,15 +20,25 @@ func CheckHealth() (string, error) {
 
 	url := paymentDefaultUrl
 
-	defaultHealth, err := check(paymentDefaultUrl)
-	if err != nil {
-		defaultHealth.Failing = true
-	}
+	defaultCh, fallbackCh := make(chan Health), make(chan Health)
 
-	fallbackHealth, err := check(paymentFallbackUrl)
-	if err != nil {
-		fallbackHealth.Failing = true
-	}
+	go func() {
+		defaultHealth, err := check(paymentDefaultUrl)
+		if err != nil {
+			defaultHealth.Failing = true
+		}
+		defaultCh <- defaultHealth
+	}()
+
+	go func() {
+		fallbackHealth, err := check(paymentFallbackUrl)
+		if err != nil {
+			fallbackHealth.Failing = true
+		}
+		fallbackCh <- fallbackHealth
+	}()
+
+	defaultHealth, fallbackHealth := <-defaultCh, <-fallbackCh
 
 	if (defaultHealth.MinResponseTime <= fallbackHealth.MinResponseTime) && !defaultHealth.Failing {
 		url = paymentDefaultUrl
