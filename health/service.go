@@ -74,16 +74,6 @@ func check(url string) (Health, error) {
 }
 
 func CheckSetReturnUrl() (string, error) {
-	newUrl := checkUntilReturn()
-
-	if newUrl != "" {
-		PostUrl = newUrl
-	}
-
-	return newUrl, nil
-}
-
-func checkUntilReturn() string {
 	newUrl := ""
 	var err error
 	for {
@@ -96,7 +86,12 @@ func checkUntilReturn() string {
 			time.Sleep(time.Second / 2)
 		}
 	}
-	return newUrl
+
+	if newUrl != "" {
+		PostUrl = newUrl
+	}
+
+	return newUrl, nil
 }
 
 func HealthWorker() {
