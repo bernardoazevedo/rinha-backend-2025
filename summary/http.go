@@ -15,19 +15,28 @@ func PaymentsSummary(ctx *fasthttp.RequestCtx) {
 	from := string(queryArgs.Peek("from"))
 	to := string(queryArgs.Peek("to"))
 
-	defaultSummary, err := getPaymentsSummary(paymentDefaultUrl, from, to)
-	if err != nil {
-		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		return
-	}
-	summary["default"] = defaultSummary
+	defaultCh, fallbackCh := make(chan Summary), make(chan Summary)
 
-	fallbackSummary, err := getPaymentsSummary(paymentFallbackUrl, from, to)
-	if err != nil {
-		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		return
-	}
-	summary["fallback"] = fallbackSummary
+	go func()  {
+		defaultSummary, err := getPaymentsSummary(paymentDefaultUrl, from, to)
+		if err != nil {
+			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+			return
+		}
+		defaultCh <- defaultSummary
+	}()
+	
+	go func()  {
+		fallbackSummary, err := getPaymentsSummary(paymentFallbackUrl, from, to)
+		if err != nil {
+			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+			return
+		}
+		fallbackCh <- fallbackSummary
+	}()
+
+	summary["default"] = <-defaultCh
+	summary["fallback"] = <-fallbackCh
 
 	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
