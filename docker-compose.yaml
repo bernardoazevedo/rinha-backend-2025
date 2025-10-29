@@ -6,8 +6,8 @@ services:
     depends_on:
       - api1
       - api2
-      # - api3
-      # - api4
+      - api3
+      - api4
     ports:
       - "9999:9999"
     networks:
@@ -37,11 +37,11 @@ services:
   api2:
     <<: *api
 
-  # api3:
-  #   <<: *api
+  api3:
+    <<: *api
 
-  # api4:
-  #   <<: *api
+  api4:
+    <<: *api
   
   health: 
     build: 
