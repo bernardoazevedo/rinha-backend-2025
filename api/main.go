@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
 	"github.com/bernardoazevedo/rinha-backend-2025/api/payment"
@@ -36,11 +34,4 @@ func callPayments(ctx *fasthttp.RequestCtx) {
 
 func callPaymentsSummary(ctx *fasthttp.RequestCtx) {
 	summary.PaymentsSummary(ctx)
-}
-
-func uniqid(prefix string) string {
-	now := time.Now()
-	sec := now.Unix()
-	usec := now.UnixNano() % 0x100000
-	return fmt.Sprintf("%s%08x%05x", prefix, sec, usec)
 }

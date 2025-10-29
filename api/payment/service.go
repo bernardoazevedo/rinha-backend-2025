@@ -29,12 +29,12 @@ func postPayment(payment []byte) (bool, error) {
 			break
 
 		} else if err != nil {
-			for j := 0; j < i; j++ { // espera 1s * numRequisicao => 1s, 2s, 3s
+			// espera 1s * numRequisicao => 1s, 2s, 3s
+			for j := 0; j < i; j++ { 
 				time.Sleep(time.Second)
 			}
 
 		} else {
-			// defer response.CloseBodyStream()
 			// deu bom, saio fora
 			break
 		}
@@ -78,7 +78,6 @@ func post(url string, body []byte) (*fasthttp.Response, bool, error) {
 }
 
 func queuePayment(payment []byte) error {
-	// paymentqueue.AddToChannel(payment)
 	paymentqueue.Add(payment)
 	return nil
 }
