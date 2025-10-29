@@ -1,3 +1,5 @@
 .env
 /tmp
 /api/tmp
+/health/tmp
+/payment/tmp
