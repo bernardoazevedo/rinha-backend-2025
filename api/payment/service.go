@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
 	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/api/paymentQueue"
@@ -21,23 +20,13 @@ func postPayment(payment []byte) (bool, error) {
 		url = "http://payment-processor-default:8080"
 	}
 
-	for i := 0; i < 3; i++ {
-		_, alreadyExistsPayment, err = post(url, payment)
+	_, alreadyExistsPayment, err = post(url, payment)
+	if alreadyExistsPayment {
+		// já existe, não faço nada
 
-		if alreadyExistsPayment {
-			// saio fora
-			break
-
-		} else if err != nil {
-			// espera 1s * numRequisicao => 1s, 2s, 3s
-			for j := 0; j < i; j++ { 
-				time.Sleep(time.Second)
-			}
-
-		} else {
-			// deu bom, saio fora
-			break
-		}
+	} else if err != nil {
+		fmt.Printf("deu ruim, fila de novo: %s\n", string(payment))
+		paymentqueue.Add(payment)
 	}
 
 	return alreadyExistsPayment, err

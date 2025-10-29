@@ -1,13 +1,19 @@
 package paymentqueue
 
 import (
+	"sync"
+
 	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
 )
 
-var QueueName string = "payment" 
+var QueueName string = "payment"
+var addLock sync.Mutex
+var popLock sync.Mutex
 
 func Add(item []byte) error {
+	addLock.Lock()
 	err := key.Push(QueueName, string(item))
+	addLock.Unlock()
 	if err != nil {
 		return err
 	}
@@ -15,7 +21,9 @@ func Add(item []byte) error {
 }
 
 func Get() string {
+	popLock.Lock()
 	payment, err := key.Pop(QueueName)
+	popLock.Unlock()
 	if err != nil {
 		return ""
 	}
