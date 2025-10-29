@@ -9,10 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
 	"github.com/valyala/fasthttp"
 )
-
-var PostUrl string
 
 func CheckHealth() (string, error) {
 	paymentDefaultUrl := "http://payment-processor-default:8080"
@@ -88,7 +87,7 @@ func CheckSetReturnUrl() (string, error) {
 	}
 
 	if newUrl != "" {
-		PostUrl = newUrl
+		key.Set("url", newUrl)
 	}
 
 	return newUrl, nil
