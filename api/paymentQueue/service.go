@@ -1,7 +1,7 @@
 package paymentqueue
 
 import (
-	"github.com/bernardoazevedo/rinha-backend-2025/key"
+	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
 )
 
 var QueueName string = "payment" 

@@ -6,8 +6,8 @@ services:
     depends_on:
       - api1
       - api2
-      - api3
-      - api4
+      # - api3
+      # - api4
     ports:
       - "9999:9999"
     networks:
@@ -22,7 +22,7 @@ services:
   api1: &api
     build: 
       context: .
-      dockerfile: build/Dockerfile
+      dockerfile: api/build/Dockerfile
     networks:
       - api
       - payment-processor
@@ -31,17 +31,47 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: "75MB"
+          cpus: "0.10"
+          memory: "25MB"
 
   api2:
     <<: *api
 
-  api3:
-    <<: *api
+  # api3:
+  #   <<: *api
 
-  api4:
-    <<: *api
+  # api4:
+  #   <<: *api
+  
+  health: 
+    build: 
+      context: .
+      dockerfile: health/build/Dockerfile
+    networks:
+      - api
+      - payment-processor
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: "10MB"
+
+  payment: 
+    build: 
+      context: .
+      dockerfile: payment/build/Dockerfile
+    networks:
+      - api
+      - payment-processor
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "190MB"
 
   redis:
     image: "redis:alpine"

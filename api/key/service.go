@@ -21,7 +21,7 @@ func GetNewClient() *redis.Client {
 
 func GetClient() *redis.Client {
 	ctx := context.Background()
-	err := RedisClient.Ping(ctx).Err()
+	_, err := RedisClient.Ping(ctx).Result()
 	if err != nil {
 		newClient := GetNewClient()
 		return newClient

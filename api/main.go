@@ -5,11 +5,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/bernardoazevedo/rinha-backend-2025/health"
-	"github.com/bernardoazevedo/rinha-backend-2025/key"
-	"github.com/bernardoazevedo/rinha-backend-2025/payment"
-	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/paymentQueue"
-	"github.com/bernardoazevedo/rinha-backend-2025/summary"
+	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
+	"github.com/bernardoazevedo/rinha-backend-2025/api/payment"
+	"github.com/bernardoazevedo/rinha-backend-2025/api/summary"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 )
@@ -20,13 +18,9 @@ func main() {
 
 	key.GetNewClient()
 
-	health.PostUrl = "http://payment-processor-default:8080"
-	paymentqueue.QueueName = uniqid("payment")
-
-	go health.HealthWorker()
-
-	for i := 0; i < 1; i++ {
-		go payment.PaymentWorker()
+	err := key.Set("url", "http://payment-processor-default:8080")
+	if err != nil {
+		panic(err)
 	}
 
 	r := router.New()

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bernardoazevedo/rinha-backend-2025/health"
-	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/paymentQueue"
+	"github.com/bernardoazevedo/rinha-backend-2025/api/key"
+	paymentqueue "github.com/bernardoazevedo/rinha-backend-2025/api/paymentQueue"
 	"github.com/valyala/fasthttp"
 )
 
@@ -15,7 +15,11 @@ func postPayment(payment []byte) (bool, error) {
 	var err error
 	alreadyExistsPayment := false
 
-	url := health.PostUrl
+	url, err := key.Get("url")
+	if err != nil {
+		// não tem url ou não consegui buscar, então uso a padrão
+		url = "http://payment-processor-default:8080"
+	}
 
 	for i := 0; i < 3; i++ {
 		_, alreadyExistsPayment, err = post(url, payment)
@@ -25,14 +29,8 @@ func postPayment(payment []byte) (bool, error) {
 			break
 
 		} else if err != nil {
-			// tento até a 3 vez
-			url, err = health.CheckSetReturnUrl()
-			if err != nil {
-				fmt.Printf("erro [%d] ao checar url: "+err.Error()+"\n", i)
-
-				for j := 0; j < i; j++ { // espera 1s * numRequisicao => 1s, 2s, 3s
-					time.Sleep(time.Second)
-				}
+			for j := 0; j < i; j++ { // espera 1s * numRequisicao => 1s, 2s, 3s
+				time.Sleep(time.Second)
 			}
 
 		} else {
@@ -80,6 +78,7 @@ func post(url string, body []byte) (*fasthttp.Response, bool, error) {
 }
 
 func queuePayment(payment []byte) error {
-	paymentqueue.AddToChannel(payment)
+	// paymentqueue.AddToChannel(payment)
+	paymentqueue.Add(payment)
 	return nil
 }
